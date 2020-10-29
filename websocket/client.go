@@ -12,19 +12,41 @@ type Client struct {
 }
 
 // StartHandler func
-func (cl *Client) StartHandler() {
+func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 	defer func() {
 		cl.Conn.Close()
 	}()
 
 	for {
-		var rpcReq JSONRPCRequest
+		var rpcReq *JSONRPCRequest
 		err := cl.Conn.ReadJSON(&rpcReq)
 		if err != nil {
 			log.Errorf(err.Error())
 			return
 		}
 
-		println("Message Received:", *rpcReq.Method)
+		println("Method Received:", *rpcReq.Method)
+		println("Method ID:", *rpcReq.ID)
+
+		rpcReq.Client = cl
+		rpc.processMessage <- rpcReq
 	}
+}
+
+// ResponseError func
+func (cl *Client) ResponseError(errorCode ErrorCode, data interface{}, id *string) error {
+	err := cl.Conn.WriteJSON(&JSONRPCResponse{
+		Jsonrpc: "2.0",
+		Error: &JSONRPCError{
+			Code:    errorCode.Code,
+			Message: errorCode.Message,
+			Data:    data,
+		},
+		ID: id,
+	})
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	return nil
 }
