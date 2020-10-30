@@ -2,7 +2,6 @@ package websocket
 
 import (
 	ws "github.com/gorilla/websocket"
-	"github.com/stellar/go/support/log"
 )
 
 // Client struct
@@ -21,7 +20,7 @@ func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 		var rpcReq *JSONRPCRequest
 		err := cl.Conn.ReadJSON(&rpcReq)
 		if err != nil {
-			log.Errorf(err.Error())
+			println(err.Error())
 			return
 		}
 
