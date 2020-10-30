@@ -115,10 +115,14 @@ func (j *JSONRPCWS) Start() {
 }
 
 // SendMessage func
-func (j *JSONRPCWS) SendMessage(toClientID *string, id *string, method *string, params interface{}) error {
+func (j *JSONRPCWS) SendMessage(toClientID *string, message *JSONRPCRequest) error {
 	if client, ok := j.clients[*toClientID]; ok {
 		// TODO: Send message to client
 		println("Sending message to ", client)
+		err := client.Conn.WriteJSON(message)
+		if err != nil {
+			return nil
+		}
 	}
 	return nil
 }
