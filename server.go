@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/jsonrpcws/websocket"
 	"github.com/labstack/echo"
+	"github.com/tasavakul/jsonrpcws/websocket"
 )
 
 func main() {
