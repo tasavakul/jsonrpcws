@@ -1,4 +1,4 @@
-package main
+package jsonrpcws
 
 import (
 	"github.com/gorilla/websocket"
