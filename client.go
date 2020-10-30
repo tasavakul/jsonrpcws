@@ -34,7 +34,17 @@ func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 
 // ResponseError func
 func (cl *Client) ResponseError(errorCode ErrorCode, data interface{}, id *string) error {
-	err := cl.Conn.WriteJSON(&JSONRPCResponse{
+	err := cl.Conn.WriteJSON(cl.GenerateResponseError(errorCode, data, id))
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	return nil
+}
+
+// GenerateResponseError func
+func (cl *Client) GenerateResponseError(errorCode ErrorCode, data interface{}, id *string) *JSONRPCResponse {
+	return &JSONRPCResponse{
 		Jsonrpc: "2.0",
 		Error: &JSONRPCError{
 			Code:    errorCode.Code,
@@ -42,10 +52,5 @@ func (cl *Client) ResponseError(errorCode ErrorCode, data interface{}, id *strin
 			Data:    data,
 		},
 		ID: id,
-	})
-	if err != nil {
-		println(err.Error())
-		return err
 	}
-	return nil
 }
