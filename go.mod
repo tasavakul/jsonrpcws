@@ -1,4 +1,4 @@
-module gitgub.com/tasavakul/jsonrpcws
+module github.com/tasavakul/jsonrpcws
 
 go 1.15
 
