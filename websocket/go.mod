@@ -1,4 +1,4 @@
-module github.com/jsonrpcws/websocket
+module github.com/tasavakul/jsonrpcws/websocket
 
 go 1.15
 
