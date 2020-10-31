@@ -16,6 +16,15 @@ func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 		cl.Conn.Close()
 	}()
 
+	if rpc.OnCloseHandler != nil {
+		cl.Conn.SetCloseHandler(func(code int, text string) error {
+			if cl.ID != nil {
+				return rpc.OnCloseHandler(*cl.ID, code, text)
+			}
+			return nil
+		})
+	}
+
 	for {
 		var rpcReq *JSONRPCRequest
 		err := cl.Conn.ReadJSON(&rpcReq)

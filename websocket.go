@@ -54,6 +54,7 @@ type JSONRPCError struct {
 type JSONRPCWS struct {
 	processMessage chan *JSONRPCRequest
 	clients        map[string]*Client
+	OnCloseHandler func(clientID string, code int, text string) error
 }
 
 // WSConnect func
