@@ -54,3 +54,12 @@ func (cl *Client) GenerateResponseError(errorCode ErrorCode, data interface{}, i
 		ID: id,
 	}
 }
+
+// GenerateReponseResult func
+func (cl *Client) GenerateReponseResult(data interface{}, id *string) *JSONRPCResponse {
+	return &JSONRPCResponse{
+		Jsonrpc: "2.0",
+		Result:  data,
+		ID:      id,
+	}
+}
