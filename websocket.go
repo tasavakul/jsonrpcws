@@ -98,9 +98,11 @@ func (j *JSONRPCWS) Start() {
 						message.Client.ResponseError(InternalError, nil, message.ID)
 						break
 					}
-					err = message.Client.Conn.WriteJSON(resp)
-					if err != nil {
-						println(err.Error())
+					if resp != nil {
+						err = message.Client.Conn.WriteJSON(resp)
+						if err != nil {
+							println(err.Error())
+						}
 					}
 				} else {
 					err := message.Client.ResponseError(MethodNotFound, nil, message.ID)
