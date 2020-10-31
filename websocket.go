@@ -133,6 +133,7 @@ func (j *JSONRPCWS) SendMessage(toClientID *string, message *JSONRPCRequest) err
 // AddClient func
 func (j *JSONRPCWS) AddClient(clientID string, client *Client) error {
 	j.clients[clientID] = client
+	client.ID = &clientID
 	return nil
 }
 
