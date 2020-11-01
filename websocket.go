@@ -32,7 +32,7 @@ type JSONRPCRequest struct {
 	Method  *string     `json:"method"`
 	ID      *string     `json:"id,omitempty"`
 	Params  interface{} `json:"params,omitempty"`
-	Client  *Client
+	Client  *Client     `json:"-"`
 }
 
 // JSONRPCResponse struct
