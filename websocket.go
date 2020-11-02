@@ -23,7 +23,7 @@ type ErrorCode struct {
 var (
 	rpc      *JSONRPCWS
 	upgrader = websocket.Upgrader{}
-	handlers = make(map[string]func(rpc *JSONRPCWS, cl *Client, rpcReq *JSONRPCRequest) (*JSONRPCResponse, error))
+	handlers = make(map[string]func(rpc *JSONRPCWS, cl *Client, rpcMessage *JSONRPCMessage) (*JSONRPCResponse, error))
 )
 
 // JSONRPCRequest struct
@@ -43,6 +43,17 @@ type JSONRPCResponse struct {
 	ID      *string       `json:"id,omitempty"`
 }
 
+// JSONRPCMessage struct
+type JSONRPCMessage struct {
+	Jsonrpc *string       `json:"jsonrpc"`
+	Method  *string       `json:"method,omitempty"`
+	ID      *string       `json:"id,omitempty"`
+	Params  interface{}   `json:"params,omitempty"`
+	Result  interface{}   `json:"result,omitempty"`
+	Error   *JSONRPCError `json:"error,omitempty"`
+	Client  *Client       `json:"-"`
+}
+
 // JSONRPCError struct
 type JSONRPCError struct {
 	Code    int64       `json:"code"`
@@ -52,7 +63,7 @@ type JSONRPCError struct {
 
 // JSONRPCWS struct
 type JSONRPCWS struct {
-	processMessage chan *JSONRPCRequest
+	processMessage chan *JSONRPCMessage
 	clients        map[string]*Client
 	OnCloseHandler func(clientID string, code int, text string) error
 }
@@ -75,14 +86,14 @@ func WSConnect(c echo.Context) error {
 // New func
 func New() *JSONRPCWS {
 	rpc = &JSONRPCWS{
-		processMessage: make(chan *JSONRPCRequest),
+		processMessage: make(chan *JSONRPCMessage),
 		clients:        make(map[string]*Client),
 	}
 	return rpc
 }
 
 // RegisterHandler func
-func (j *JSONRPCWS) RegisterHandler(method string, handler func(rpc *JSONRPCWS, cl *Client, rpcReq *JSONRPCRequest) (*JSONRPCResponse, error)) {
+func (j *JSONRPCWS) RegisterHandler(method string, handler func(rpc *JSONRPCWS, cl *Client, rpcReq *JSONRPCMessage) (*JSONRPCResponse, error)) {
 	handlers[method] = handler
 }
 

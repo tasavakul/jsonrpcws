@@ -26,7 +26,7 @@ func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 	}
 
 	for {
-		var rpcReq *JSONRPCRequest
+		var rpcReq *JSONRPCMessage
 		err := cl.Conn.ReadJSON(&rpcReq)
 		if err != nil {
 			println(err.Error())
