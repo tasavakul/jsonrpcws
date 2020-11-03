@@ -49,12 +49,12 @@ var (
 
 // JSONRPCRequest struct
 type JSONRPCRequest struct {
-	Jsonrpc       *string                          `json:"jsonrpc"`
-	Method        *string                          `json:"method"`
-	ID            *string                          `json:"id,omitempty"`
-	Params        interface{}                      `json:"params,omitempty"`
-	Client        *Client                          `json:"-"`
-	ReponseHandle func(res *JSONRPCResponse) error `json:"-"`
+	Jsonrpc        *string                          `json:"jsonrpc"`
+	Method         *string                          `json:"method"`
+	ID             *string                          `json:"id,omitempty"`
+	Params         interface{}                      `json:"params,omitempty"`
+	Client         *Client                          `json:"-"`
+	ResponseHandle func(res *JSONRPCResponse) error `json:"-"`
 }
 
 // JSONRPCResponse struct
@@ -157,7 +157,7 @@ func (j *JSONRPCWS) Start() {
 							message.Client.ResponseError(InternalError, nil, message.ID)
 							break
 						}
-						err = req.ReponseHandle(&res)
+						err = req.ResponseHandle(&res)
 						if err != nil {
 							message.Client.ResponseError(InternalError, nil, message.ID)
 							break
