@@ -7,6 +7,10 @@ import (
 	"github.com/labstack/echo"
 )
 
+const (
+	jsonrpcVersion = "2.0"
+)
+
 // Reserved Error code
 var (
 	ParseError     = JsonrpcError{-32700, "Parse error"}
@@ -174,6 +178,7 @@ func (j *JSONRPCWS) SendMessage(toClientID *string, message *JSONRPCRequest) err
 	if client, ok := j.clients[*toClientID]; ok {
 		// TODO: Send message to client
 		message.ID = getString(fmt.Sprintf("%d", client.NewRequestID()))
+		message.Jsonrpc = getString(jsonrpcVersion)
 		println("Sending message to ", client)
 		err := client.Conn.WriteJSON(message)
 		if err != nil {
