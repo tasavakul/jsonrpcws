@@ -49,11 +49,12 @@ var (
 
 // JSONRPCRequest struct
 type JSONRPCRequest struct {
-	Jsonrpc *string     `json:"jsonrpc"`
-	Method  *string     `json:"method"`
-	ID      *string     `json:"id,omitempty"`
-	Params  interface{} `json:"params,omitempty"`
-	Client  *Client     `json:"-"`
+	Jsonrpc       *string                          `json:"jsonrpc"`
+	Method        *string                          `json:"method"`
+	ID            *string                          `json:"id,omitempty"`
+	Params        interface{}                      `json:"params,omitempty"`
+	Client        *Client                          `json:"-"`
+	ReponseHandle func(res *JSONRPCResponse) error `json:"-"`
 }
 
 // JSONRPCResponse struct
@@ -148,18 +149,20 @@ func (j *JSONRPCWS) Start() {
 				} else {
 					println("Suppose to be Response Message")
 					if req, ok := message.Client.SentRequest[*message.ID]; ok {
-						if handler, ok := responseHandlers[*req.Method]; ok {
-							err := handler(j, message.Client, message)
-							if err != nil {
-								message.Client.ResponseError(InternalError, nil, message.ID)
-								break
-							}
-						} else {
-							err := message.Client.ResponseError(MethodNotFound, nil, message.ID)
-							if err != nil {
-								println(err.Error())
-							}
+						// if handler, ok := responseHandlers[*req.Method]; ok {
+						// 	err := handler(j, message.Client, message)
+						var res JSONRPCResponse
+						err := Convert(message, &res)
+						if err != nil {
+							message.Client.ResponseError(InternalError, nil, message.ID)
+							break
 						}
+						err = req.ReponseHandle(&res)
+						if err != nil {
+							message.Client.ResponseError(InternalError, nil, message.ID)
+							break
+						}
+
 					} else {
 						err := message.Client.ResponseError(InvalidRequest, nil, message.ID)
 						if err != nil {
