@@ -6,8 +6,10 @@ import (
 
 // Client struct
 type Client struct {
-	ID   *string `json:"id,omitempty"`
-	Conn *ws.Conn
+	ID               *string `json:"id,omitempty"`
+	Conn             *ws.Conn
+	RunningRequestID *int64
+	SentRequest      map[string]*JSONRPCRequest
 }
 
 // StartHandler func
@@ -42,7 +44,7 @@ func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 }
 
 // ResponseError func
-func (cl *Client) ResponseError(errorCode ErrorCode, data interface{}, id *string) error {
+func (cl *Client) ResponseError(errorCode JsonrpcError, data interface{}, id *string) error {
 	err := cl.Conn.WriteJSON(cl.GenerateResponseError(errorCode, data, id))
 	if err != nil {
 		println(err.Error())
@@ -52,7 +54,7 @@ func (cl *Client) ResponseError(errorCode ErrorCode, data interface{}, id *strin
 }
 
 // GenerateResponseError func
-func (cl *Client) GenerateResponseError(errorCode ErrorCode, data interface{}, id *string) *JSONRPCResponse {
+func (cl *Client) GenerateResponseError(errorCode JsonrpcError, data interface{}, id *string) *JSONRPCResponse {
 	return &JSONRPCResponse{
 		Jsonrpc: "2.0",
 		Error: &JSONRPCError{
@@ -71,4 +73,20 @@ func (cl *Client) GenerateResponseResult(data interface{}, id *string) *JSONRPCR
 		Result:  data,
 		ID:      id,
 	}
+}
+
+// NewRequestID func
+func (cl *Client) NewRequestID() *int64 {
+	if cl.RunningRequestID == nil {
+		cl.RunningRequestID = GetInt64(1)
+	} else {
+		*cl.RunningRequestID++
+	}
+
+	return cl.RunningRequestID
+}
+
+// GetInt64 func
+func GetInt64(val int64) *int64 {
+	return &val
 }

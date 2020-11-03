@@ -1,29 +1,46 @@
 package jsonrpcws
 
 import (
+	"fmt"
+
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 )
 
 // Reserved Error code
 var (
-	ParseError     = ErrorCode{-32700, "Parse error"}
-	InvalidRequest = ErrorCode{-32600, "Invalid request"}
-	MethodNotFound = ErrorCode{-32601, "Method not found"}
-	InvalidParam   = ErrorCode{-32602, "Invalid param"}
-	InternalError  = ErrorCode{-32603, "Internal error"}
+	ParseError     = JsonrpcError{-32700, "Parse error"}
+	InvalidRequest = JsonrpcError{-32600, "Invalid request"}
+	MethodNotFound = JsonrpcError{-32601, "Method not found"}
+	InvalidParam   = JsonrpcError{-32602, "Invalid param"}
+	InternalError  = JsonrpcError{-32603, "Internal error"}
 )
 
-// ErrorCode struct
-type ErrorCode struct {
+// JsonrpcError struct
+type JsonrpcError struct {
 	Code    int64
 	Message string
 }
 
+// CommonError struct
+type CommonError struct {
+	error
+	Code    int64
+	Message string
+}
+
+// Error Declaration for Job
 var (
-	rpc      *JSONRPCWS
-	upgrader = websocket.Upgrader{}
-	handlers = make(map[string]func(rpc *JSONRPCWS, cl *Client, rpcMessage *JSONRPCMessage) (*JSONRPCResponse, error))
+	DuplicateJobError      = CommonError{Code: 100, Message: "Duplicate job entry"}
+	ParameterNotFoundError = CommonError{Code: 101, Message: "Parameter not found"}
+	InvalidParameterMetric = CommonError{Code: 102, Message: "Parameters of one Job has multiple metric"}
+	ClientNotFound         = CommonError{Code: 103, Message: "Client not found"}
+)
+var (
+	rpc              *JSONRPCWS
+	upgrader         = websocket.Upgrader{}
+	requestHandlers  = make(map[string]func(rpc *JSONRPCWS, cl *Client, rpcMessage *JSONRPCMessage) (*JSONRPCResponse, error))
+	responseHandlers = make(map[string]func(rpc *JSONRPCWS, cl *Client, rpcMessage *JSONRPCMessage) error)
 )
 
 // JSONRPCRequest struct
@@ -92,9 +109,9 @@ func New() *JSONRPCWS {
 	return rpc
 }
 
-// RegisterHandler func
-func (j *JSONRPCWS) RegisterHandler(method string, handler func(rpc *JSONRPCWS, cl *Client, rpcReq *JSONRPCMessage) (*JSONRPCResponse, error)) {
-	handlers[method] = handler
+// RegisterRequestHandler func
+func (j *JSONRPCWS) RegisterRequestHandler(method string, handler func(rpc *JSONRPCWS, cl *Client, rpcReq *JSONRPCMessage) (*JSONRPCResponse, error)) {
+	requestHandlers[method] = handler
 }
 
 // Start func
@@ -103,23 +120,47 @@ func (j *JSONRPCWS) Start() {
 		for {
 			select {
 			case message := <-j.processMessage:
-				println("Message method:", *message.Method)
-				if handler, ok := handlers[*message.Method]; ok {
-					resp, err := handler(j, message.Client, message)
-					if err != nil {
-						message.Client.ResponseError(InternalError, nil, message.ID)
-						break
-					}
-					if resp != nil {
-						err = message.Client.Conn.WriteJSON(resp)
+				if message.Method != nil {
+					println("Suppose to be Request message")
+					println("Message method:", *message.Method)
+					if handler, ok := requestHandlers[*message.Method]; ok {
+						resp, err := handler(j, message.Client, message)
+						if err != nil {
+							message.Client.ResponseError(InternalError, nil, message.ID)
+							break
+						}
+						if resp != nil {
+							err = message.Client.Conn.WriteJSON(resp)
+							if err != nil {
+								println(err.Error())
+							}
+						}
+					} else {
+						err := message.Client.ResponseError(MethodNotFound, nil, message.ID)
 						if err != nil {
 							println(err.Error())
 						}
 					}
 				} else {
-					err := message.Client.ResponseError(MethodNotFound, nil, message.ID)
-					if err != nil {
-						println(err.Error())
+					println("Suppose to be Response Message")
+					if req, ok := message.Client.SentRequest[*message.ID]; ok {
+						if handler, ok := responseHandlers[*req.Method]; ok {
+							err := handler(j, message.Client, message)
+							if err != nil {
+								message.Client.ResponseError(InternalError, nil, message.ID)
+								break
+							}
+						} else {
+							err := message.Client.ResponseError(MethodNotFound, nil, message.ID)
+							if err != nil {
+								println(err.Error())
+							}
+						}
+					} else {
+						err := message.Client.ResponseError(InvalidRequest, nil, message.ID)
+						if err != nil {
+							println(err.Error())
+						}
 					}
 				}
 				break
@@ -132,11 +173,15 @@ func (j *JSONRPCWS) Start() {
 func (j *JSONRPCWS) SendMessage(toClientID *string, message *JSONRPCRequest) error {
 	if client, ok := j.clients[*toClientID]; ok {
 		// TODO: Send message to client
+		message.ID = getString(fmt.Sprintf("%d", client.NewRequestID()))
 		println("Sending message to ", client)
 		err := client.Conn.WriteJSON(message)
 		if err != nil {
 			return nil
 		}
+		client.SentRequest[*message.ID] = message
+	} else {
+		return ClientNotFound
 	}
 	return nil
 }
@@ -145,6 +190,7 @@ func (j *JSONRPCWS) SendMessage(toClientID *string, message *JSONRPCRequest) err
 func (j *JSONRPCWS) AddClient(clientID string, client *Client) error {
 	j.clients[clientID] = client
 	client.ID = &clientID
+	client.SentRequest = make(map[string]*JSONRPCRequest)
 	return nil
 }
 
