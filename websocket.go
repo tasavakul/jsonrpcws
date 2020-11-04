@@ -151,6 +151,8 @@ func (j *JSONRPCWS) Start() {
 				} else {
 					println("Suppose to be Response Message")
 					if req, ok := message.Client.SentRequest[*message.ID]; ok {
+						println("Response from Request :")
+						PrintJSON(req)
 						// if handler, ok := responseHandlers[*req.Method]; ok {
 						// 	err := handler(j, message.Client, message)
 						var res JSONRPCResponse
@@ -159,6 +161,8 @@ func (j *JSONRPCWS) Start() {
 							message.Client.ResponseError(InternalError, nil, message.ID)
 							break
 						}
+						println("Converted Res :")
+						PrintJSON(res)
 						err = req.ResponseHandle(&res)
 						if err != nil {
 							message.Client.ResponseError(InternalError, nil, message.ID)
