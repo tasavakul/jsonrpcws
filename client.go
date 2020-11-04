@@ -12,7 +12,15 @@ type Client struct {
 	Conn             *ws.Conn
 	RunningRequestID *int64
 	SentRequest      map[string]*JSONRPCRequest
+	rpc              *JSONRPCWS
 	mu               sync.Mutex
+}
+
+// NewClient func
+func NewClient(rpc *JSONRPCWS) *Client {
+	client := new(Client)
+	client.rpc = rpc
+	return client
 }
 
 // StartHandler func
@@ -48,7 +56,7 @@ func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 
 // ResponseError func
 func (cl *Client) ResponseError(errorCode JsonrpcError, data interface{}, id *string) error {
-	err := cl.Conn.WriteJSON(cl.GenerateResponseError(errorCode, data, id))
+	err := cl.rpc.SendResponse(cl, cl.GenerateResponseError(errorCode, data, id))
 	if err != nil {
 		println(err.Error())
 		return err

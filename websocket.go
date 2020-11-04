@@ -99,6 +99,7 @@ func WSConnect(c echo.Context) error {
 	}
 	client := &Client{
 		Conn: conn,
+		rpc:  rpc,
 	}
 	go client.StartHandler(rpc)
 
