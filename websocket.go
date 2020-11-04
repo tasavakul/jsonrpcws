@@ -189,7 +189,7 @@ func (j *JSONRPCWS) GetClientByID(clientID *string) *Client {
 // SendRequest func
 func (j *JSONRPCWS) SendRequest(client *Client, request *JSONRPCRequest) error {
 	var mess JSONRPCMessage
-	err := Convert(request, mess)
+	err := Convert(request, &mess)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (j *JSONRPCWS) SendRequest(client *Client, request *JSONRPCRequest) error {
 // SendResponse func
 func (j *JSONRPCWS) SendResponse(client *Client, response *JSONRPCResponse) error {
 	var mess JSONRPCMessage
-	err := Convert(response, mess)
+	err := Convert(response, &mess)
 	if err != nil {
 		return err
 	}
@@ -220,6 +220,7 @@ func (j *JSONRPCWS) SendMessage(client *Client, message *JSONRPCMessage) error {
 	}
 	message.Jsonrpc = getString(jsonrpcVersion)
 	println("Sending message to ", client)
+	PrintJSON(message)
 	err := client.Conn.WriteJSON(message)
 	if err != nil {
 		return nil
