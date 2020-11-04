@@ -217,7 +217,7 @@ func (j *JSONRPCWS) SendMessage(client *Client, message *JSONRPCMessage) error {
 	// TODO: Send message to client
 	client.mu.Lock()
 	if isRequest {
-		message.ID = getString(fmt.Sprintf("%d", client.NewRequestID()))
+		message.ID = getString(fmt.Sprintf("%d", *client.NewRequestID()))
 	}
 	message.Jsonrpc = getString(jsonrpcVersion)
 	println("Sending message to ", client)
