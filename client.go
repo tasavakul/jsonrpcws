@@ -46,8 +46,9 @@ func (cl *Client) StartHandler(rpc *JSONRPCWS) {
 			return
 		}
 
-		println("Method Received:", *rpcReq.Method)
-		println("Method ID:", *rpcReq.ID)
+		// println("Method Received:", *rpcReq.Method)
+		// println("Method ID:", *rpcReq.ID)
+		PrintJSON(rpcReq)
 
 		rpcReq.Client = cl
 		rpc.processMessage <- rpcReq
