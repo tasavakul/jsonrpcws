@@ -29,3 +29,23 @@ func Convert(param interface{}, output interface{}) error {
 	}
 	return nil
 }
+
+// PrintJSON funx
+func PrintJSON(v interface{}) {
+	str, err := ToJSON(v)
+	if err != nil {
+		println("Error", err.Error())
+		return
+	}
+	println(str)
+}
+
+// ToJSON func
+func ToJSON(v interface{}) (string, error) {
+
+	data, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}

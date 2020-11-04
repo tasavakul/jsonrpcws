@@ -135,6 +135,7 @@ func (j *JSONRPCWS) Start() {
 							break
 						}
 						if resp != nil {
+							PrintJSON(resp)
 							err = j.SendResponse(message.Client, resp)
 							if err != nil {
 								println(err.Error())
