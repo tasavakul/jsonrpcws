@@ -1,6 +1,8 @@
 package jsonrpcws
 
 import (
+	"sync"
+
 	ws "github.com/gorilla/websocket"
 )
 
@@ -10,6 +12,7 @@ type Client struct {
 	Conn             *ws.Conn
 	RunningRequestID *int64
 	SentRequest      map[string]*JSONRPCRequest
+	mu               sync.Mutex
 }
 
 // StartHandler func

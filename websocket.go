@@ -135,7 +135,7 @@ func (j *JSONRPCWS) Start() {
 							break
 						}
 						if resp != nil {
-							err = message.Client.Conn.WriteJSON(resp)
+							err = j.SendResponse(message.Client, resp)
 							if err != nil {
 								println(err.Error())
 							}
@@ -176,21 +176,64 @@ func (j *JSONRPCWS) Start() {
 	}()
 }
 
-// SendMessage func
-func (j *JSONRPCWS) SendMessage(toClientID *string, message *JSONRPCRequest) error {
-	if client, ok := j.clients[*toClientID]; ok {
-		// TODO: Send message to client
-		message.ID = getString(fmt.Sprintf("%d", client.NewRequestID()))
-		message.Jsonrpc = getString(jsonrpcVersion)
-		println("Sending message to ", client)
-		err := client.Conn.WriteJSON(message)
-		if err != nil {
-			return nil
-		}
-		client.SentRequest[*message.ID] = message
-	} else {
-		return ClientNotFound
+// GetClientByID func
+func (j *JSONRPCWS) GetClientByID(clientID *string) *Client {
+
+	if client, ok := j.clients[*clientID]; ok {
+		return client
 	}
+	return nil
+}
+
+// SendRequest func
+func (j *JSONRPCWS) SendRequest(client *Client, request *JSONRPCRequest) error {
+	var mess JSONRPCMessage
+	err := Convert(request, mess)
+	if err != nil {
+		return err
+	}
+	return j.SendMessage(client, &mess)
+}
+
+// SendResponse func
+func (j *JSONRPCWS) SendResponse(client *Client, response *JSONRPCResponse) error {
+	var mess JSONRPCMessage
+	err := Convert(response, mess)
+	if err != nil {
+		return err
+	}
+	return j.SendMessage(client, &mess)
+}
+
+// SendMessage func
+func (j *JSONRPCWS) SendMessage(client *Client, message *JSONRPCMessage) error {
+	isRequest := false
+	if message.Method != nil {
+		isRequest = true
+	}
+
+	// TODO: Send message to client
+	client.mu.Lock()
+	if isRequest {
+		message.ID = getString(fmt.Sprintf("%d", client.NewRequestID()))
+	}
+	message.Jsonrpc = getString(jsonrpcVersion)
+	println("Sending message to ", client)
+	err := client.Conn.WriteJSON(message)
+	if err != nil {
+		return nil
+	}
+	if isRequest {
+		var req JSONRPCRequest
+		err := Convert(message, &req)
+		if err != nil {
+			return err
+		}
+		client.SentRequest[*message.ID] = &req
+	}
+
+	client.mu.Unlock()
+
 	return nil
 }
 
