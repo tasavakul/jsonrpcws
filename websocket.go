@@ -163,6 +163,7 @@ func (j *JSONRPCWS) Start() {
 						}
 						println("Converted Res :")
 						PrintJSON(res)
+						println("Handler:", req.ResponseHandle)
 						err = req.ResponseHandle(&res)
 						if err != nil {
 							message.Client.ResponseError(InternalError, nil, message.ID)
