@@ -1,8 +1,6 @@
 package jsonrpcws
 
 import (
-	"fmt"
-
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 )
@@ -224,7 +222,7 @@ func (j *JSONRPCWS) SendMessage(client *Client, message *JSONRPCMessage) error {
 	// TODO: Send message to client
 	client.mu.Lock()
 	if isRequest {
-		message.ID = getString(fmt.Sprintf("%d", *client.NewRequestID()))
+		message.ID = client.NewRequestID()
 	}
 	message.Jsonrpc = getString(jsonrpcVersion)
 	println("Sending message to ", client)

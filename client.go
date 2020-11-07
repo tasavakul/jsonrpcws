@@ -3,6 +3,7 @@ package jsonrpcws
 import (
 	"sync"
 
+	"github.com/google/uuid"
 	ws "github.com/gorilla/websocket"
 )
 
@@ -88,17 +89,23 @@ func (cl *Client) GenerateResponseResult(data interface{}, id *string) *JSONRPCR
 }
 
 // NewRequestID func
-func (cl *Client) NewRequestID() *int64 {
-	if cl.RunningRequestID == nil {
-		cl.RunningRequestID = GetInt64(1)
-	} else {
-		*cl.RunningRequestID++
-	}
+func (cl *Client) NewRequestID() *string {
+	// if cl.RunningRequestID == nil {
+	// 	cl.RunningRequestID = GetInt64(1)
+	// } else {
+	// 	*cl.RunningRequestID++
+	// }
 
-	return cl.RunningRequestID
+	// return cl.RunningRequestID
+	return GetString(uuid.New().String())
 }
 
 // GetInt64 func
 func GetInt64(val int64) *int64 {
+	return &val
+}
+
+// GetString func
+func GetString(val string) *string {
 	return &val
 }
